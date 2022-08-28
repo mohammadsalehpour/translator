@@ -1,5 +1,4 @@
 from googletrans import Translator
-import os
 
 def main():
     sourceFile = "./fa_IR.po"
@@ -17,12 +16,12 @@ def main():
         if  line.startswith('msgid "'):
             key = line.lstrip('msgid "')
             key = key.rstrip('"\n')
-            
+
         if(key != ""):
             if  line.strip() == 'msgstr ""':
                 value = get_translation(translator, key)
                 line = 'msgstr "' + value + '"\n'
-        
+
         fileT.write(line)
 
     fileS.close()
@@ -35,7 +34,7 @@ def get_translation(translator, source):
 
     if not result:
         return
-        
+
     print(result.text)
     return result.text
 

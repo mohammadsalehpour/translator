@@ -5,10 +5,31 @@
     <div class="col-sm-8">
       <div class="card mb-2">
         <div class="card-header">
-          Translate
+          <div class="d-flex justify-content-between">
+            <h6>Translate</h6>
+            <div>
+
+              <!-- <button mat-raised-button>Basic</button>
+              <button mat-raised-button color="primary">Primary</button>
+              <button mat-raised-button color="warn">Warn</button> -->
+              <button mat-raised-button class="mx-1" (click)="selectFile()">
+                <mat-icon>file_upload</mat-icon> Upload File
+              </button>
+              <button mat-raised-button class="mx-1" (click)="getWords()">
+                <mat-icon>refresh</mat-icon> Refresh
+              </button>
+              <button mat-raised-button color="primary" (click)="confirmSave()" class="mx-1">
+                <mat-icon>save</mat-icon> Save
+              </button>
+
+              <!-- <button type="button" (click)="selectFile()" class="btn btn-info btn-sm mx-1">Upload File</button>
+              <button type="button" (click)="getWords()" class="btn btn-info btn-sm mx-1">Refresh</button>
+              <button type="button" (click)="confirmSave()" class="btn btn-primary btn-sm mx-1">Save</button> -->
+            </div>
+          </div>
         </div>
         <div class="card-body p-0">
-          <table class="table table-bordered table-sm mb-0">
+          <table *ngIf="words" class="table table-bordered table-sm mb-0">
             <thead>
               <tr>
                 <th dir="ltr" class="text-left" style="text-align: left;">
@@ -20,18 +41,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let word of words; let i=index;">
+              <tr *ngFor="let word of words; let i=index;" (click)="getWord(word)">
                 <th dir="ltr" class="text-left p-0" style="text-align: left;">
-                  <input type="text" class="p-2" [(ngModel)]="word.key" name="word+{{i}}" id="word+{{i}}" placeholder="Search"
-                    style="width: 100%; height: 100%; border: 0ex; font-size: 18px;" readonly>
+                  <input type="text" class="p-2" [(ngModel)]="word.key" name="word+{{i}}" id="word+{{i}}"
+                    placeholder="Search" style="width: 100%; height: 100%; border: 0ex; font-size: 18px;" readonly>
 
                   <!-- <p class="mx-2 mb-1" style="font-size: 18px; font-weight: 500;">
                     <span> {{word.key}}</span>
                   </p> -->
                 </th>
                 <td dir="rtl" class="text-right p-0" style="text-align: right;">
-                  <input type="text" class="p-2" [(ngModel)]="word.value" name="word+{{i}}" id="word+{{i}}" placeholder="Search"
-                    style="width: 100%; height: 100%; border: 0ex; font-size: 18px;">
+                  <input type="text" class="p-2" [(ngModel)]="word.value" name="word+{{i}}" id="word+{{i}}"
+                    placeholder="Search" style="width: 100%; height: 100%; border: 0ex; font-size: 18px;">
 
                   <!-- <p class="mx-2 m-1" style="font-size: 18px; font-weight: 500;">
                     <span> {{word.value}}</span>
@@ -40,24 +61,65 @@
               </tr>
             </tbody>
           </table>
-          <button (click)="getWords()">getWords</button>
         </div>
       </div>
     </div>
     <div class="col-sm-4">
       <div class="card">
         <div class="card-header">
-          Suggestion
+          <div class="d-flex justify-content-between">
+            <h6>Suggestion For: <span style="color:royalblue;">{{ word?.key }}</span></h6>
+            <div>
+              <button mat-raised-button class="mx-1" (click)="getWord(word!)">
+                <mat-icon>refresh</mat-icon> Refresh
+              </button>
+              <!-- <button type="button" (click)="getWord(word!)" class="btn btn-info btn-sm mx-1">Refresh</button> -->
+            </div>
+          </div>
         </div>
         <ul class="list-group list-group-flush">
-          <li class="list-group-item">An item</li>
-          <li class="list-group-item">A second item</li>
-          <li class="list-group-item">A third item</li>
+          <li *ngFor="let sugges of word?.suggestion; let i=index;" (click)="acceptSugges(sugges)"
+            class="list-group-item">{{ sugges }}</li>
         </ul>
       </div>
     </div>
   </div>
+
+
+  <dx-popup [rtlEnabled]="rtlEnabled" [width]="300" [height]="280" [showTitle]="true" title="Save Alert"
+    [dragEnabled]="false" [hideOnOutsideClick]="true" [showCloseButton]="false" [(visible)]="savePopupVisible">
+    <dxi-toolbar-item widget="dxButton" toolbar="bottom" location="before" [options]="saveButtonOptions">
+    </dxi-toolbar-item>
+    <dxi-toolbar-item widget="dxButton" toolbar="bottom" location="after" [options]="closeButtonOptions">
+    </dxi-toolbar-item>
+    <div *dxTemplate="let data of 'content'">
+      are you sure for save?
+    </div>
+  </dx-popup>
+
+  <dx-popup [rtlEnabled]="rtlEnabled" [width]="300" [height]="280" [showTitle]="true" title="Upload file"
+    [dragEnabled]="false" [hideOnOutsideClick]="true" [showCloseButton]="false" [(visible)]="uploadPopupVisible">
+    <dxi-toolbar-item widget="dxButton" toolbar="bottom" location="before" [options]="uploadButtonOptions">
+    </dxi-toolbar-item>
+    <dxi-toolbar-item widget="dxButton" toolbar="bottom" location="after" [options]="closeButtonOptions">
+    </dxi-toolbar-item>
+    <div *dxTemplate="let data of 'content'">
+      <input type="file" class="file-input" style="display: none;" (change)="onFileSelected($event)" #fileUpload>
+
+      <div class="file-upload">
+
+        {{fileName || "No file uploaded yet."}}
+
+        <button mat-mini-fab color="primary" class="upload-btn" (click)="fileUpload.click()">
+          <!-- <i class="fas fa-attach">attach_file</i> -->
+          <mat-icon>attach_file</mat-icon>
+        </button>
+      </div>
+    </div>
+  </dx-popup>
+
 </div>
+
 
 
 <router-outlet></router-outlet>
