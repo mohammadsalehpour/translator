@@ -23,6 +23,10 @@
               "src/assets"
             ],
             "styles": [
+              "./node_modules/bootstrap/dist/css/bootstrap.rtl.min.css",
+              "./node_modules/bootstrap/dist/css/bootstrap-grid.rtl.min.css",
+              "./node_modules/bootstrap/dist/css/bootstrap-reboot.rtl.min.css",
+              "./node_modules/bootstrap/dist/css/bootstrap-utilities.rtl.min.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -97,5 +101,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "c9027afa-95d6-4b51-bf2b-151a068267d0"
   }
 }
