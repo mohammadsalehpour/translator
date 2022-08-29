@@ -1,11 +1,17 @@
+from werkzeug import Response
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 from flask import Flask, render_template, request, redirect, url_for, abort
 from werkzeug.utils import secure_filename
+import json
+from flask_cors import CORS, cross_origin
+
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 
@@ -72,6 +78,27 @@ def saveWords():
         return "saveWordsPOST"
         # task_content = request.form['words']
     return "saveWords"
+
+@app.route('/api/test', methods=['GET', 'POST'])
+@cross_origin(origin='*')
+def test(*args, **kwargs):
+    if request.method == 'POST':
+
+        data = json.loads(request.data)
+        words = dict(data).get('words')
+        words = json.dumps(words)
+
+
+        headers = {
+          'Content-Type': 'application/json'
+        }
+        # data = request.data
+        return Response(words, 200, headers)
+    if request.method == 'OPTIONS':
+      return Response("OPTIONS", 200, headers)
+    if request.method == 'GET':
+      return Response("GET", 200, headers)
+    return Response("return null", 200, headers)
 
 @app.route('/api/upload', methods=['POST'])
 def upload_files():

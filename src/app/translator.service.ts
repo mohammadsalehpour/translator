@@ -26,18 +26,20 @@ export class TranslatorService {
   }
 
   public saveTranslate(words: Word[]): Observable<string> {
-    let url_ = "http://localhost:5050/api/saveWords";
+    let url_ = "http://localhost:5000/api/test";
     url_ = url_.replace(/[?&]$/, "");
 
-    const content_ = JSON.stringify(words);
+
+    const content_ = JSON.stringify({
+      "name":"mohammad",
+      "words": words
+      });
 
     let options_: any = {
       body: content_,
       observe: "response",
-      responseType: "blob",
       headers: new HttpHeaders({
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json"
+        "Content-Type": "application/json"
       })
     };
 
@@ -58,7 +60,7 @@ export class TranslatorService {
     //         console.error('There was an error!', error.message);
     //     }
     // })
-    const upload$ = this.http.post("http://localhost:5050/", content_, options_);
+    const upload$ = this.http.post(url_, content_, options_);
     upload$.subscribe((respons) => {
       console.log("SaveWords Respons: ", respons);
     });
