@@ -5,30 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: FastAPI",
+      "name": "Python: Current File",
       "type": "python",
       "request": "launch",
-      "module": "uvicorn",
-      "args": [
-        "main:app"
-      ],
-      "jinja": true,
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Flask",
-      "type": "python",
-      "request": "launch",
-      "module": "flask",
-      "env": {
-        "FLASK_APP": "app.py",
-        "FLASK_ENV": "development"
-      },
-      "args": [
-        "run",
-        "--no-debugger"
-      ],
-      "jinja": true,
+      "program": "${file}",
+      "console": "integratedTerminal",
       "justMyCode": true
     }
   ]

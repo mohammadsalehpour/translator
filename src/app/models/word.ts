@@ -10,9 +10,18 @@ export class Word {
   sourceDirection?: Direction;
   targetDirection?: Direction;
 
-  constructor(_key: string, _value: string, _suggestion: string[]){
+  constructor(_key: string, _value: string, _suggestion: string[], sourceLang: Language,
+    targetLang: Language,
+    sourceDirection: Direction,
+    targetDirection: Direction) {
     this.key = _key;
     this.value = _value;
     this.suggestion = _suggestion;
+    this.sourceLang = sourceLang;
+    this.targetLang = targetLang;
+    this.sourceDirection = sourceDirection;
+    this.targetDirection = targetDirection;
   }
+
+
 }

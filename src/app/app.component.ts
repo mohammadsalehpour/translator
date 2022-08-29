@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Word } from './models/word';
 import { TranslatorService } from './translator.service';
 import notify from 'devextreme/ui/notify';
+import { GetData } from './models/get-data';
 
 @Component({
   selector: 'app-root',
@@ -57,8 +58,9 @@ export class AppComponent {
   }
 
   public getWords() {
-    this.translatorService.getTranslate().subscribe((value: Word[]) => {
-      this.words = value;
+    this.translatorService.getTranslate().subscribe((value: GetData) => {
+      console.log("value", value);
+      this.words = <Word[]>value.data;
       console.log(value);
     });
   }
@@ -104,15 +106,17 @@ export class AppComponent {
 
   public uploadFile(): void {
     if (this.file) {
-      this.translatorService.uploadfile(this.file!).subscribe((value: string) => {
+      this.translatorService.uploadfile(this.file!).subscribe((value: GetData) => {
         this.uploadPopupVisible = false;
+        this.file = undefined;
+        this.fileName = "";
         this.getWords();
         notify({
-          message: `Upload File ${value}`,
+          message: `Upload File ${value.message}`,
           height: 45,
           width: 400,
           minWidth: 150,
-          type: 'success',
+          type: value.error ? 'error' : 'success',
           displayTime: 3500,
           animation: {
             show: {
@@ -125,8 +129,10 @@ export class AppComponent {
       });
     } else {
       this.uploadPopupVisible = false;
+      this.file = undefined;
+      this.fileName = "";
       notify({
-        message: `Can Not Selected File!`,
+        message: `No file is selected!`,
         height: 45,
         width: 400,
         minWidth: 150,
