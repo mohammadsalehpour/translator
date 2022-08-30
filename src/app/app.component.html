@@ -29,8 +29,39 @@
           </div>
         </div>
         <div class="card-body p-0">
-          <table *ngIf="words" class="table table-bordered table-sm mb-0">
-            <thead>
+          <section class="example-container mat-elevation-z8" tabindex="0" *ngIf="words">
+            <table mat-table [dataSource]="dataSource">
+
+              <!-- key Column -->
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef  dir="ltr" class="text-left" style="text-align: left;">
+                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700;">English</p>
+                </th>
+                <td mat-cell *matCellDef="let element;" dir="ltr" class="text-left p-0" style="text-align: left;">
+                  <span class="" style="width: 100%; height: 100%; border: 0ex; font-size: 18px; padding: 12px 11px;
+                    margin: 0 1px;" readonly>{{ element.key }}</span>
+                  </td>
+              </ng-container>
+
+              <!-- value Column -->
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef dir="rtl" class="text-right" style="text-align: right;">
+                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700; font-family: 'Iranyekan';">فارسی</p>
+                </th>
+                <td mat-cell *matCellDef="let element; let i" dir="rtl" class="text-right p-0" style="text-align: right;">
+                  <input type="text" class="" [(ngModel)]="element.value" name="word+{{i}}" id="word+{{i}}"
+                    placeholder="Search" style="width: 100%; height: 100%; border: 0ex; font-size: 18px; padding: 12px 11px;
+                    margin: 0 1px;">
+                  </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"  (click)="getWord(row)"></tr>
+            </table>
+          </section>
+
+          <!-- <table *ngIf="words" class="table table-responsive table-sm mb-0">
+            <thead style="position: sticky;top: 0;background-color: #fbfbfb;border-bottom: 1px solid #2c2c2c;">
               <tr>
                 <th dir="ltr" class="text-left" style="text-align: left;">
                   <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700;">English</p>
@@ -42,30 +73,22 @@
             </thead>
             <tbody>
               <tr *ngFor="let word of words; let i=index;" (click)="getWord(word)">
-                <th dir="ltr" class="text-left p-0" style="text-align: left;">
+                <td dir="ltr" class="text-left p-0" style="text-align: left;">
                   <input type="text" class="p-2" [(ngModel)]="word.key" name="word+{{i}}" id="word+{{i}}"
                     placeholder="Search" style="width: 100%; height: 100%; border: 0ex; font-size: 18px;" readonly>
-
-                  <!-- <p class="mx-2 mb-1" style="font-size: 18px; font-weight: 500;">
-                    <span> {{word.key}}</span>
-                  </p> -->
-                </th>
+                </td>
                 <td dir="rtl" class="text-right p-0" style="text-align: right;">
                   <input type="text" class="p-2" [(ngModel)]="word.value" name="word+{{i}}" id="word+{{i}}"
                     placeholder="Search" style="width: 100%; height: 100%; border: 0ex; font-size: 18px;">
-
-                  <!-- <p class="mx-2 m-1" style="font-size: 18px; font-weight: 500;">
-                    <span> {{word.value}}</span>
-                  </p> -->
                 </td>
               </tr>
             </tbody>
-          </table>
+          </table> -->
         </div>
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="card">
+      <div class="card suggestion-cord">
         <div class="card-header">
           <div class="d-flex justify-content-between">
             <h6>Suggestion For: <span style="color:royalblue;">{{ word?.key }}</span></h6>

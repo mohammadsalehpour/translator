@@ -11,6 +11,8 @@ import { GetData } from './models/get-data';
 })
 export class AppComponent {
   public title: any;
+  public displayedColumns = ['key', 'value'];
+  public dataSource: any;
   public fileName: string = '';
   public file?: File;
 
@@ -60,6 +62,7 @@ export class AppComponent {
   public getWords() {
     this.translatorService.getTranslate().subscribe((value: GetData) => {
       console.log("value", value);
+      this.dataSource = <Word[]>value.data;
       this.words = <Word[]>value.data;
       console.log(value);
     });

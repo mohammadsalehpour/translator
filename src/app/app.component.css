@@ -1,0 +1,31 @@
+/* .suggestion-cord {
+  width: 40%;
+  position: fixed;
+} */
+
+/* .table-wrapper {
+  max-height: 800px;
+  overflow: auto;
+  display:inline-block;
+} */
+
+.example-container {
+  height: 800px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+}
+
+/* .table-wrapper thead th {
+  background-color: #fbfbfb;
+  border-bottom: 1px solid #2c2c2c;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+td {
+  border: 1px solid #eeeeee;
+} */
