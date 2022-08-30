@@ -1,6 +1,7 @@
 export class GetData {
   error?: boolean;
   message?: string;
+  result?: string;
   data!: any;
 
     constructor(data?: GetData) {
@@ -16,6 +17,7 @@ export class GetData {
         if (_data) {
             this.error = _data["error"];
             this.message = _data["message"];
+            this.result = _data["result"];
             this.data = _data["data"];
             if (Array.isArray(_data["data"])) {
                 this.data = [] as any;
@@ -37,6 +39,7 @@ export class GetData {
     data = typeof data === 'object' ? data : {};
     data["error"] = this.error
     data["message"] = this.message
+    data["result"] = this.result
     data["data"] = this.data
     if (Array.isArray(this.data)) {
       data["data"] = [];

@@ -81,7 +81,7 @@ export class TranslatorService {
   }
 
   public saveTranslate(words: Word[]): Observable<string> {
-    let url_ = this.baseUrl + "/word/saveAll";
+    let url_ = this.baseUrl + "/file/save";
     url_ = url_.replace(/[?&]$/, "");
 
 
@@ -106,7 +106,7 @@ export class TranslatorService {
   }
 
   public uploadfile(file: File): Observable<GetData> {
-    let url_ = this.baseUrl + "/upload";
+    let url_ = this.baseUrl + "/file/upload";
     url_ = url_.replace(/[?&]$/, "");
 
     let options_: any = {
@@ -129,6 +129,21 @@ export class TranslatorService {
 
     return of(new GetData);
 
+  }
+
+  public downloadFile(fileName: string): Observable<GetData> {
+    let url_ = this.baseUrl + "/file/download/"+ fileName;
+    url_ = url_.replace(/[?&]$/, "");
+
+    try {
+      const upload$ = this.http.get<GetData>(url_);
+      upload$.subscribe();
+      return upload$;
+    } catch (error) {
+      console.error("error oooooooooooo", error);
+    }
+
+    return of(new GetData);
   }
 
 

@@ -3,6 +3,8 @@ import { Word } from './models/word';
 import { TranslatorService } from './translator.service';
 import notify from 'devextreme/ui/notify';
 import { GetData } from './models/get-data';
+import { Language } from './enums/language.enum';
+import { Direction } from './enums/direction.enum';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +20,7 @@ export class AppComponent {
 
   public rtlEnabled: boolean = true;
   public words?: Word[];
-  public word?: Word;
+  public word: Word;
 
   public savePopupVisible = false;
   public saveButtonOptions: any;
@@ -30,6 +32,7 @@ export class AppComponent {
 
   constructor(private translatorService: TranslatorService) {
     this.rtlEnabled = true;
+    this.word = new Word("", "", [], Language.english, Language.persian, Direction.ltr, Direction.rtl);
     this.depends();
 
   }
@@ -63,6 +66,7 @@ export class AppComponent {
     this.translatorService.getTranslate().subscribe((value: GetData) => {
       console.log("value", value);
       this.dataSource = <Word[]>value.data;
+      this.fileName = <string>value.result;
       this.words = <Word[]>value.data;
       console.log(value);
     });
@@ -71,6 +75,11 @@ export class AppComponent {
   public getWord(word: Word) {
     this.word = word;
     console.log(this.word);
+  }
+
+  public changeWordValue(event: KeyboardEvent): void {
+    this.word!.value = (<HTMLTextAreaElement>event.target).value;
+    console.log("event", event);
   }
 
   public acceptSugges(sugges: string): void {
@@ -150,6 +159,32 @@ export class AppComponent {
       },
         { position: "bottom right", direction: "up-push" });
     }
+  }
+
+  public downloadFile(): void {
+
+    if (this.fileName != "") {
+      this.translatorService.downloadFile(this.fileName).subscribe((value: GetData) => {
+
+        console.log("downloadFile value :", value);
+        notify({
+          message: `Download File ${value.message}`,
+          height: 45,
+          width: 400,
+          minWidth: 150,
+          type: value.error ? 'error' : 'success',
+          displayTime: 3500,
+          animation: {
+            show: {
+              type: 'fade', duration: 400, from: 0, to: 1,
+            },
+            hide: { type: 'fade', duration: 40, to: 0 },
+          },
+        },
+          { position: "bottom right", direction: "up-push" });
+      });
+    }
+
   }
 
   public onFileSelected(event: any): void {

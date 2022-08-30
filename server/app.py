@@ -1,6 +1,8 @@
+from tkinter import E
 from werkzeug import Response
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import Model, SQLAlchemy
+from flask import send_file, send_from_directory
 from sqlalchemy import delete
 from datetime import datetime
 import os
@@ -23,7 +25,6 @@ app.config['DOWNLOAD_PATH'] = 'downloads'
 app.config['FILENAME_PATH'] = 'static'
 
 
-
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(200), nullable=False)
@@ -31,6 +32,7 @@ class Todo(db.Model):
 
     def __repr__(self):
         return '<Task %r>' % self.id
+
 
 class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,6 +55,7 @@ class Word(db.Model):
     def __repr__(self):
         return '<Word %r>' % self.id
 
+
 class TranslatedFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(500))
@@ -69,8 +72,6 @@ class TranslatedFile(db.Model):
 
     def __repr__(self):
         return '<TranslatedFile %r>' % self.id
-
-
 
 
 @app.route('/', methods=['POST', 'GET'])
@@ -90,6 +91,7 @@ def index():
         tasks = Todo.query.order_by(Todo.date_created).all()
         return render_template('index.html', tasks=tasks)
 
+
 @app.route('/delete/<int:id>')
 def deleteTask(id):
     task_to_delete = Todo.query.get_or_404(id)
@@ -100,6 +102,7 @@ def deleteTask(id):
         return redirect('/')
     except:
         return 'There was a problem deleting that task'
+
 
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update(id):
@@ -117,23 +120,25 @@ def update(id):
     else:
         return render_template('update.html', task=task)
 
+
 @app.route('/api/file/save', methods=['POST'])
 def fileSave():
     if request.method == 'POST':
-      data = json.loads(request.data)
-      words = dict(data).get('words')
+        data = json.loads(request.data)
+        words = dict(data).get('words')
 
-      for word in words:
-        file = TranslatedFile.query.filter_by(key=word['key']).first()
-        file.value = word['value']
-
-      try:
-          db.session.commit()
-          return Response("file Saved Successfully!", 200)
-      except:
-          return Response("Can Not Saved File!", 200)
+        try:
+            for word in words:
+                # db.engine.execute('')
+                file = TranslatedFile.query.filter_by(key=word['key']).first()
+                file.value = word['value']
+                db.session.commit()
+            return Response("file Saved Successfully!", 200)
+        except:
+            return Response("Can Not Saved File!", 200)
 
     return Response("Request method not POST", 200)
+
 
 @app.route('/api/word/saveAll', methods=['POST'])
 def saveAll():
@@ -151,22 +156,24 @@ def saveAll():
 
         try:
             for _word in new_words:
-              db.session.add(_word)
-              db.session.commit()
+                db.session.add(_word)
+                db.session.commit()
 
             return Response("save_words", 200)
         except:
             return 'There was an issue adding your task'
     return Response("error save_words", 200)
 
+
 @app.route('/api/word/getAll', methods=['GET'])
 def getAll():
     headers = {
-      'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
     }
     body = {
         'error': True,
         'message': "",
+        'result': "",
         'data': None
     }
     body = dict(body)
@@ -176,27 +183,24 @@ def getAll():
         wordList = []
         for word in words:
             wordList.append({
-              "key": word.key,
-              "value": word.value,
-              "suggestion": [],
-              "sourceLang": word.sourceLang,
-              "targetLang": word.targetLang,
-              "sourceDirection": "",
-              "targetDirection": ""
+                "key": word.key,
+                "value": word.value,
+                "suggestion": [],
+                "sourceLang": word.sourceLang,
+                "targetLang": word.targetLang,
+                "sourceDirection": "",
+                "targetDirection": ""
             })
-
-
 
         body['error'] = False
         body['message'] = "Get All Record Word"
-
-        print(type(wordList))
+        body['result'] = getFileName()
         body['data'] = wordList
-
 
         return Response(json.dumps(body), 200, headers)
 
     return Response(body, 200)
+
 
 @app.route('/api/test', methods=['GET', 'POST'])
 @cross_origin(origin='*')
@@ -218,10 +222,12 @@ def test(*args, **kwargs):
         return Response("GET", 200, headers)
     return Response("return null", 200, headers)
 
-@app.route('/api/upload', methods=['POST'])
-def upload_files():
+
+@app.route('/api/file/upload', methods=['POST'])
+def uploadFile():
     uploaded_file = request.files['file']
     filename = secure_filename(uploaded_file.filename)
+    setFileName(filename)
     headers = {
         'Content-Type': 'application/json'
     }
@@ -239,10 +245,11 @@ def upload_files():
             body['message'] = "The file extension is not correct! It should be (.po, .json, .xml)"
             return Response(json.dumps(body), 200, headers)
         try:
-          uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
-          words = extractWords(filename)
-          if saveWords(words):
-            return Response("file save Successfully!", 200, headers)
+            uploaded_file.save(os.path.join(
+                app.config['UPLOAD_PATH'], filename))
+            words = extractWords(filename)
+            if saveWords(words):
+                return Response("file save Successfully!", 200, headers)
         except:
             return Response("file save error", 200, headers)
 
@@ -255,127 +262,169 @@ def upload_files():
     return Response(json.dumps(body), 200, headers)
 
 
+@app.route('/api/file/download', methods=['GET'])
+def downloadFileLink():
+    # replaceWords()
+    # return redirect("http://localhost:5050/api/file/download/" + getFileName())
+    # link = "http://localhost:5050/api/file/download/" + getFileName()
+    return Response(getFileName(), 200)
+
+
+@app.route('/api/file/download/<path:filename>', methods=['GET'])
+def downloadFile(filename):
+    if filename != "":
+        if replaceWords():
+            uploads = os.path.join(app.root_path, app.config['DOWNLOAD_PATH'])
+            return send_from_directory(directory=uploads, filename=filename)
+        else:
+            return "error"
+
 
 def deleteTable():
-  try:
-    db.session.query(TranslatedFile).delete()
-    db.session.commit()
-    return True
-  except:
-    return False
+    try:
+        db.session.query(TranslatedFile).delete()
+        db.session.commit()
+        return True
+    except:
+        return False
+
 
 def extractWords(fileName):
-  sourceFile = app.config['UPLOAD_PATH'] + "/" + fileName
-  words = []
+    sourceFile = app.config['UPLOAD_PATH'] + "/" + fileName
+    words = []
 
-  file = open(sourceFile, 'r', encoding="utf8")
-  lines = file.readlines()
+    file = open(sourceFile, 'r', encoding="utf8")
+    lines = file.readlines()
 
-  key = ""
-  value = ""
+    key = ""
+    value = ""
 
-  for line in lines:
+    for line in lines:
 
-    word = {
-        'key': "",
-        'value': "",
-        'sourceLang': "en",
-        'targetLang': "fa"
-    }
-    word = dict(word)
+        word = {
+            'key': "",
+            'value': "",
+            'sourceLang': "en",
+            'targetLang': "fa"
+        }
+        word = dict(word)
 
-    if line.startswith('msgid "'):
-      key = line.lstrip('msgid "')
-      key = key.rstrip('"\n')
+        if line.startswith('msgid "'):
+            key = line.lstrip('msgid "')
+            key = key.rstrip('"\n')
 
-    if key != "":
-      if line.startswith('msgstr "'):
+        if key != "":
+            if line.startswith('msgstr "'):
 
-        value = line.lstrip('msgstr "')
-        value = value.rstrip('"\n')
+                value = line.lstrip('msgstr "')
+                value = value.rstrip('"\n')
 
-        word['key'] = key
-        word['value'] = value
+                word['key'] = key
+                word['value'] = value
 
-        words.append(word)
+                words.append(word)
 
-  return words
+    return words
+
 
 def saveWords(words):
+    if deleteTable():
+        new_words = []
+        for word in words:
+            # word = dict(word)
+            new_word = TranslatedFile(
+                key=word['key'], value=word['value'], sLang=word['sourceLang'], tLang=word['targetLang'])
+            new_words.append(new_word)
 
-  if deleteTable():
-    new_words = []
-    for word in words:
-      # word = dict(word)
-      new_word = TranslatedFile(key=word['key'], value=word['value'], sLang=word['sourceLang'],tLang=word['targetLang'])
-      new_words.append(new_word)
+        try:
+            for _word in new_words:
+                db.session.add(_word)
 
-    try:
-      for _word in new_words:
-        db.session.add(_word)
+            db.session.commit()
+            return True
 
+        except:
+            return Response("There was an issue adding your task", 200)
 
-      db.session.commit()
-      return True
+    return None
 
-    except:
-      return Response("There was an issue adding your task", 200)
-
-  return None
 
 def loadWords():
-  words = TranslatedFile.query.order_by(TranslatedFile.id).all()
-  wordList = []
-  for word in words:
-    wordList.append({
-      "key": word.key,
-      "value": word.value,
-      "suggestion": [],
-      "sourceLang": word.sourceLang,
-      "targetLang": word.targetLang,
-      "sourceDirection": "",
-      "targetDirection": ""
-    })
-
+    words = TranslatedFile.query.order_by(TranslatedFile.id).all()
+    wordList = []
+    for word in words:
+        wordList.append({
+            "key": word.key,
+            "value": word.value,
+            "suggestion": [],
+            "sourceLang": word.sourceLang,
+            "targetLang": word.targetLang,
+            "sourceDirection": "",
+            "targetDirection": ""
+        })
     return wordList
 
-def replaceWords(fileName):
-  words = loadWords()
-  sourceFile = app.config['UPLOAD_PATH'] + "/" + fileName
-  targetFile = app.config['DOWNLOAD_PATH'] + "/" + fileName
 
-  fileS = open(sourceFile, 'r', encoding="utf8")
-  fileT = open(targetFile, 'w', encoding="utf8")
-  lines = fileS.readlines()
+def replaceWords():
+    words = loadWords()
+    fileName = getFileName()
+    sourceFile = app.config['UPLOAD_PATH'] + "/" + fileName
+    targetFile = app.config['DOWNLOAD_PATH'] + "/" + fileName
 
-  key = ""
-  value = ""
+    fileS = open(sourceFile, 'r', encoding="utf8")
+    fileT = open(targetFile, 'w', encoding="utf8")
+    lines = fileS.readlines()
 
-  for line in lines:
-    if line.startswith('msgid "'):
-      key = line.lstrip('msgid "')
-      key = key.rstrip('"\n')
+    key = ""
+    value = ""
 
-    if key != "":
-      if line.startswith('msgstr "'):
+    try:
+        for line in lines:
+            if line.startswith('msgid "'):
+                key = line.lstrip('msgid "')
+                key = key.rstrip('"\n')
 
-        value = line.lstrip('msgstr "')
-        value = value.rstrip('"\n')
+            if key != "":
+                if line.startswith('msgstr "'):
 
-        for word in words:
-          if word['key'] == key:
-            value = 'msgstr "' + word['value'] + '"\n'
+                    value = line.lstrip('msgstr "')
+                    value = value.rstrip('"\n')
 
-    fileT.write(line)
+                    for word in words:
+                        if word['key'] == key:
+                            line = 'msgstr "' + word['value'] + '"\n'
 
-  fileS.close()
-  fileT.close()
-  fileT.save(os.path.join(app.config['DOWNLOAD_PATH'], filename))
+            fileT.write(line)
 
-  return words
+        fileS.close()
+        fileT.close()
 
-def writeFileName(fileName):
-  return app.config['FILENAME_PATH'] + fileName
+        return True
+    except:
+        return False
+
+
+def setFileName(name):
+    fileNamePath = app.config['FILENAME_PATH'] + "/filename.txt"
+    try:
+        file = open(fileNamePath, 'w', encoding="utf8")
+        line = name
+        file.write(line)
+        return True
+    except:
+        return False
+
+
+def getFileName():
+    fileNamePath = app.config['FILENAME_PATH'] + "/filename.txt"
+    try:
+        file = open(fileNamePath, 'r', encoding="utf8")
+        value = file.readline()
+        line = value.rstrip('"\n')
+        return line
+    except:
+        return ""
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="localhost", port=5050)
