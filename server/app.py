@@ -247,8 +247,8 @@ def uploadFile():
         try:
             uploaded_file.save(os.path.join(
                 app.config['UPLOAD_PATH'], filename))
-            words = extractWords(filename)
-            if saveWords(words):
+
+            if saveWords():
                 return Response("file save Successfully!", 200, headers)
         except:
             return Response("file save error", 200, headers)
@@ -275,7 +275,8 @@ def downloadFile(filename):
     if filename != "":
         if replaceWords():
             uploads = os.path.join(app.root_path, app.config['DOWNLOAD_PATH'])
-            return send_from_directory(directory=uploads, filename=filename)
+            uploads = uploads + "/" + filename
+            return send_file(path_or_file=uploads, as_attachment=True)
         else:
             return "error"
 
@@ -289,8 +290,8 @@ def deleteTable():
         return False
 
 
-def extractWords(fileName):
-    sourceFile = app.config['UPLOAD_PATH'] + "/" + fileName
+def extractWords():
+    sourceFile = app.config['UPLOAD_PATH'] + "/" + getFileName()
     words = []
 
     file = open(sourceFile, 'r', encoding="utf8")
@@ -328,6 +329,7 @@ def extractWords(fileName):
 
 
 def saveWords(words):
+    words = extractWords()
     if deleteTable():
         new_words = []
         for word in words:
@@ -337,12 +339,9 @@ def saveWords(words):
             new_words.append(new_word)
 
         try:
-            for _word in new_words:
-                db.session.add(_word)
-
+            db.session.add_all(new_words)
             db.session.commit()
             return True
-
         except:
             return Response("There was an issue adding your task", 200)
 
