@@ -7,6 +7,6 @@ Jinja2==3.1.2
 MarkupSafe==2.1.1
 SQLAlchemy==1.4.40
 Werkzeug==2.2.2
-googletrans==3.0.0
+googletrans==4.0.0rc1
 flask-cors==3.0.10
 colorama==0.4.5

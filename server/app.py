@@ -10,6 +10,8 @@ from flask import Flask, render_template, request, redirect, url_for, abort
 from werkzeug.utils import secure_filename
 import json
 from flask_cors import CORS, cross_origin
+from googletrans import Translator
+import numpy as np
 
 
 app = Flask(__name__)
@@ -40,17 +42,16 @@ class Word(db.Model):
     value = db.Column(db.String(500))
     sourceLang = db.Column(db.String(10))
     targetLang = db.Column(db.String(10))
-    sourceDirection = db.Column(db.String(10))
-    targetDirection = db.Column(db.String(10))
+    suggestedSource = db.Column(db.String(20))
+    similarityPercentage = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, key, value, sLang, tLang, sDir, tDir):
+    def __init__(self, key, value, sLang, tLang, suggestedSource):
         self.key = key
         self.value = value
         self.sourceLang = sLang
         self.targetLang = tLang
-        self.sourceDirection = sDir
-        self.targetDirection = tDir
+        self.suggestedSource = suggestedSource
 
     def __repr__(self):
         return '<Word %r>' % self.id
@@ -148,10 +149,8 @@ def saveAll():
         new_words = []
 
         for word in words:
-            new_word = Word(key=word['key'], value=word['value'], sLang=word['sourceLang'],
-                            tLang=word['targetLang'],
-                            sDir=word['sourceDirection'],
-                            tDir=word['targetDirection'])
+            new_word = Word(key=word['key'], value=word['value'],
+                            sLang=word['sourceLang'], tLang=word['targetLang'])
             new_words.append(new_word)
 
         try:
@@ -198,6 +197,47 @@ def getAll():
         body['data'] = wordList
 
         return Response(json.dumps(body), 200, headers)
+
+    return Response(body, 200)
+
+
+@app.route('/api/word/getEntity', methods=['POST'])
+def getWord():
+    if request.method == 'POST':
+        if request.data:
+            data = json.loads(request.data)
+            key = dict(data).get('key')
+
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            body = {
+                'error': True,
+                'message': "",
+                'result': "",
+                'data': None
+            }
+            body = dict(body)
+            suggestions = getSuggestions(key, "en", "fa")
+
+            try:
+                dbWord = TranslatedFile.query.filter_by(key=key).first()
+                word = {
+                    "key": dbWord.key,
+                    "value": dbWord.value,
+                    "suggestion": suggestions,
+                    "sourceLang": dbWord.sourceLang,
+                    "targetLang": dbWord.targetLang
+                }
+
+                body['error'] = False
+                body['message'] = "Get " + key
+                body['result'] = getFileName()
+                body['data'] = word
+
+                return Response(json.dumps(body), 200, headers)
+            except:
+                return Response("Can Not Find Word By Key = " + key, 200)
 
     return Response(body, 200)
 
@@ -249,14 +289,13 @@ def uploadFile():
                 app.config['UPLOAD_PATH'], filename))
 
             if saveWords():
-                return Response("file save Successfully!", 200, headers)
+              body['error'] = False
+              body['message'] = filename+" File Saved Successfully!"
+              body['data'] = filename
+              return Response(json.dumps(body), 200, headers)
         except:
             return Response("file save error", 200, headers)
 
-        body['error'] = False
-        body['message'] = filename+" File Saved Successfully!"
-        body['data'] = filename
-        return Response(json.dumps(body), 200, headers)
     body['error'] = True
     body['message'] = "filename is empty!"
     return Response(json.dumps(body), 200, headers)
@@ -279,6 +318,80 @@ def downloadFile(filename):
             return send_file(path_or_file=uploads, as_attachment=True)
         else:
             return "error"
+
+
+def getGoogleSuggestions(key, sourceLang, targetLang):
+    words = []
+    suggestedSource = "Google"
+    translator = Translator()
+
+    result = translator.translate(key, src=sourceLang, dest=targetLang)
+
+    if not result:
+        return []
+
+    words.append(Word(key, result.text, sourceLang,
+                 targetLang, suggestedSource))
+
+    if indexExists(result.extra_data.get('parsed'), 3):
+        if indexExists(result.extra_data.get('parsed')[3], 5):
+            if indexNone(result.extra_data.get('parsed')[3], 5):
+                return words
+            else:
+                suggestions = result.extra_data.get('parsed')[3][5][0][0][1]
+
+                for suggest in suggestions:
+                    words.append(
+                        Word(key, suggest[0], sourceLang, targetLang, suggestedSource))
+
+    return words
+
+
+def getAppSuggestions(key, sourceLang, targetLang):
+    words = []
+    suggestedSource = "App"
+
+    for item in range(2):
+          words.append(Word(key, "پیشنهاد نرم افزار " + str(item), sourceLang,
+                 targetLang, suggestedSource))
+
+
+    return words
+
+
+def getDictionarySuggestions(key, sourceLang, targetLang):
+    words = []
+    suggestedSource = "Dictionary"
+
+    for item in range(2):
+          words.append(Word(key, "پیشنهاد لغت نامه" + str(item), sourceLang,
+                 targetLang, suggestedSource))
+
+    return words
+
+
+def getSuggestions(key, sourceLang, targetLang):
+    googleSuggestions = np.array(
+        getGoogleSuggestions(key, sourceLang, targetLang))
+    appSuggestions = np.array(getAppSuggestions(key, sourceLang, targetLang))
+    dictionarySuggestions = np.array(
+        getDictionarySuggestions(key, sourceLang, targetLang))
+    suggestions = np.concatenate(
+        (googleSuggestions, appSuggestions, dictionarySuggestions))
+    suggestions = list(suggestions)
+    words = []
+
+    for suggest in suggestions:
+        words.append({
+            "key": suggest.key,
+            "value": suggest.value,
+            "sourceLang": suggest.sourceLang,
+            "targetLang": suggest.targetLang,
+            "suggestedSource": suggest.suggestedSource
+        })
+
+    print(words)
+    return words
 
 
 def deleteTable():
@@ -328,7 +441,7 @@ def extractWords():
     return words
 
 
-def saveWords(words):
+def saveWords():
     words = extractWords()
     if deleteTable():
         new_words = []
@@ -423,6 +536,20 @@ def getFileName():
         return line
     except:
         return ""
+
+
+def indexExists(list, index):
+    if 0 <= index < len(list):
+        return True
+    else:
+        return False
+
+
+def indexNone(list, index):
+    if list[index] is None in list:
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":

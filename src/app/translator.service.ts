@@ -60,6 +60,36 @@ export class TranslatorService {
     // const words = of(["word1","word2","word3","word4","word5"]);
   }
 
+  public getWord(key: string): Observable<GetData> {
+    let url_ = this.baseUrl + "/word/getEntity";
+    url_ = url_.replace(/[?&]$/, "");
+
+    const content_ = JSON.stringify({
+      "key": key
+    });
+
+    let options_: any = {
+      body: content_,
+      observe: "response",
+      headers: new HttpHeaders({
+        "Content-Type": "application/json"
+      })
+    };
+
+    return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_: any) => {
+      return this.processGetEntity(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processGetEntity(<any>response_);
+        } catch (e) {
+          return <Observable<GetData>><any>_observableThrow(e);
+        }
+      } else
+        return <Observable<GetData>><any>_observableThrow(response_);
+    }));
+  }
+
   protected processGetEntity(response: HttpResponseBase): Observable<GetData> {
     const status = response.status;
     const responseBlob =

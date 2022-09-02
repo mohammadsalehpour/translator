@@ -59,17 +59,17 @@ msgstr ""
 #. module: theme_prime
 #: model_terms:theme.ir.ui.view,arch:theme_prime.product_item_2
 msgid "#{rating_stats['total']} Reviews"
-msgstr "aaaaaaaaaaaa"
+msgstr ""
 
 #. module: theme_prime
 #: model_terms:theme.ir.ui.view,arch:theme_prime.s_pricing_3
 msgid "$ 15.80"
-msgstr "bbbbbbbbbbb"
+msgstr ""
 
 #. module: theme_prime
 #: model_terms:theme.ir.ui.view,arch:theme_prime.s_pricing_3
 msgid "$ 21.00"
-msgstr "21 5555555555"
+msgstr ""
 
 #. module: theme_prime
 #: model_terms:theme.ir.ui.view,arch:theme_prime.s_pricing_3
