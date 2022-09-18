@@ -1,1 +1,1 @@
-fa_IR.po
+all_fa_IR.po

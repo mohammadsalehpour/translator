@@ -30,6 +30,7 @@
               "node_modules/bootstrap/dist/css/bootstrap-grid.rtl.min.css",
               "node_modules/bootstrap/dist/css/bootstrap-reboot.rtl.min.css",
               "node_modules/bootstrap/dist/css/bootstrap-utilities.rtl.min.css",
+              "src/assets/fonts/iranyekan/css/fontiran.css",
               "src/styles.css"
             ],
             "scripts": []

@@ -53,12 +53,12 @@
               <!-- value Column -->
               <ng-container matColumnDef="value">
                 <th mat-header-cell *matHeaderCellDef dir="rtl" class="text-right" style="text-align: right;">
-                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700; font-family: 'Iranyekan';">فارسی</p>
+                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700; font-family: 'iranyekan';">فارسی</p>
                 </th>
                 <td mat-cell *matCellDef="let element; let i" dir="rtl" class="text-right p-0" style="text-align: right;">
                   <input type="text" class="" [(ngModel)]="element.value" name="word+{{i}}" id="word+{{i}}"
                   (keydown)="changeWordValue($event)" autocomplete="off"
-                    placeholder="Empty" style="width: 100%; height: 100%; border: 0ex; font-size: 18px; padding: 12px 11px;
+                    placeholder="Empty" style="width: 100%; height: 100%; border: 0ex; font-size: 18px; font-family: 'iranyekan'; padding: 12px 11px;
                     margin: 0 1px;">
                   </td>
               </ng-container>
@@ -75,7 +75,7 @@
                   <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700;">English</p>
                 </th>
                 <th dir="rtl" class="text-right" style="text-align: right;">
-                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700; font-family: 'Iranyekan';">فارسی</p>
+                  <p class="mx-2 mb-1" style="font-size: 20px; font-weight: 700; font-family: 'iranyekan';">فارسی</p>
                 </th>
               </tr>
             </thead>
@@ -130,7 +130,7 @@
               <img *ngIf="sugges.suggestedSource == 'Google'" src="../assets/images/google_logo.png" style="width: 24px;" alt="google" srcset="" data-bs-toggle="tooltip" data-bs-placement="left" title="Google">
               <img *ngIf="sugges.suggestedSource == 'App'" src="../assets/images/app_icon.png" style="width: 24px;" alt="google" srcset="" data-bs-toggle="tooltip" data-bs-placement="left" title="App">
               <img *ngIf="sugges.suggestedSource == 'Dictionary'" src="../assets/images/dictionary_icon.jpg" style="width: 24px;" alt="google" srcset="" data-bs-toggle="tooltip" data-bs-placement="left" title="Dictionary">
-              <h6 class="p-0 my-0 mx-2" style="font-size: 18px;">{{ sugges.value }}</h6>
+              <h6 class="p-0 my-0 mx-2" style="font-size: 18px; font-family: 'iranyekan';">{{ sugges.value }}</h6>
             </div>
           </mat-list-option>
         </mat-selection-list>

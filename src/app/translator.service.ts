@@ -17,6 +17,7 @@ export class TranslatorService {
 
   constructor(private http: HttpClient) {
     this.baseUrl = "http://localhost:5050/api";
+    // this.baseUrl = "http://127.0.0.1:9000/api";
   }
 
   public getTranslate(): Observable<GetData> {

@@ -20,7 +20,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///translator.db'
 db = SQLAlchemy(app)
 
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 app.config['UPLOAD_EXTENSIONS'] = ['.po', '.json', '.xml']
 app.config['UPLOAD_PATH'] = 'uploads'
 app.config['DOWNLOAD_PATH'] = 'downloads'
@@ -54,7 +54,7 @@ class Word(db.Model):
         self.suggestedSource = suggestedSource
 
     def __repr__(self):
-        return '<Word %r>' % self.id
+        return '<Word %r>' % self.key
 
 
 class TranslatedFile(db.Model):
@@ -129,6 +129,7 @@ def fileSave():
         words = dict(data).get('words')
 
         try:
+            saveWordsToDictionary(words)
             for word in words:
                 # db.engine.execute('')
                 file = TranslatedFile.query.filter_by(key=word['key']).first()
@@ -154,10 +155,12 @@ def saveAll():
             new_words.append(new_word)
 
         try:
-            for _word in new_words:
-                db.session.add(_word)
-                db.session.commit()
+            # for _word in new_words:
+            #     db.session.add(_word)
+            #     db.session.commit()
 
+            db.session.add_all(new_words)
+            db.session.commit()
             return Response("save_words", 200)
         except:
             return 'There was an issue adding your task'
@@ -289,10 +292,10 @@ def uploadFile():
                 app.config['UPLOAD_PATH'], filename))
 
             if saveWords():
-              body['error'] = False
-              body['message'] = filename+" File Saved Successfully!"
-              body['data'] = filename
-              return Response(json.dumps(body), 200, headers)
+                body['error'] = False
+                body['message'] = filename+" File Saved Successfully!"
+                body['data'] = filename
+                return Response(json.dumps(body), 200, headers)
         except:
             return Response("file save error", 200, headers)
 
@@ -351,10 +354,15 @@ def getAppSuggestions(key, sourceLang, targetLang):
     words = []
     suggestedSource = "App"
 
-    for item in range(2):
-          words.append(Word(key, "پیشنهاد نرم افزار " + str(item), sourceLang,
-                 targetLang, suggestedSource))
+    # keyWord = "%{}%".format(key)
+    # suggestions = Word.query.filter(Word.key.like(keyWord))
+    # suggestions = db.engine.execute("SELECT * FROM word WHERE key LIKE '" + keyWord + "'").all()
 
+    suggestions = Word.query.filter_by(key=key).all()
+
+    for suggest in suggestions:
+        words.append(Word(key, suggest.value, sourceLang,
+                     targetLang, suggestedSource))
 
     return words
 
@@ -363,9 +371,9 @@ def getDictionarySuggestions(key, sourceLang, targetLang):
     words = []
     suggestedSource = "Dictionary"
 
-    for item in range(2):
-          words.append(Word(key, "پیشنهاد لغت نامه" + str(item), sourceLang,
-                 targetLang, suggestedSource))
+    # for item in range(2):
+    #       words.append(Word(key, "پیشنهاد لغت نامه" + str(item), sourceLang,
+    #              targetLang, suggestedSource))
 
     return words
 
@@ -373,9 +381,12 @@ def getDictionarySuggestions(key, sourceLang, targetLang):
 def getSuggestions(key, sourceLang, targetLang):
     googleSuggestions = np.array(
         getGoogleSuggestions(key, sourceLang, targetLang))
+
     appSuggestions = np.array(getAppSuggestions(key, sourceLang, targetLang))
+
     dictionarySuggestions = np.array(
         getDictionarySuggestions(key, sourceLang, targetLang))
+
     suggestions = np.concatenate(
         (googleSuggestions, appSuggestions, dictionarySuggestions))
     suggestions = list(suggestions)
@@ -392,15 +403,6 @@ def getSuggestions(key, sourceLang, targetLang):
 
     print(words)
     return words
-
-
-def deleteTable():
-    try:
-        db.session.query(TranslatedFile).delete()
-        db.session.commit()
-        return True
-    except:
-        return False
 
 
 def extractWords():
@@ -442,23 +444,61 @@ def extractWords():
 
 
 def saveWords():
+    new_words = getWordsInstanceOfTranslatedFile()
+
+    try:
+        db.session.query(TranslatedFile).delete()
+        db.session.add_all(new_words)
+        db.session.commit()
+        return True
+    except:
+        return False
+
+
+def getWordsInstanceOfTranslatedFile():
     words = extractWords()
-    if deleteTable():
-        new_words = []
-        for word in words:
-            # word = dict(word)
-            new_word = TranslatedFile(
-                key=word['key'], value=word['value'], sLang=word['sourceLang'], tLang=word['targetLang'])
-            new_words.append(new_word)
+    new_words = []
+    for word in words:
+        new_word = TranslatedFile(
+            key=word['key'], value=word['value'], sLang=word['sourceLang'], tLang=word['targetLang'])
+        new_words.append(new_word)
+    return new_words
 
-        try:
-            db.session.add_all(new_words)
-            db.session.commit()
-            return True
-        except:
-            return Response("There was an issue adding your task", 200)
 
-    return None
+def getWordsInstanceOfWord(words):
+    new_words = []
+    for word in words:
+        new_word = Word(word['key'], word['value'], word['sourceLang'],
+                        word['targetLang'], "App")
+        new_words.append(new_word)
+    return new_words
+
+
+def saveWordsToDictionary(words):
+    new_words = []
+    for word in words:
+        _word = Word.query.filter_by(key=word['key']).first()
+        if _word is None:
+            if word['value'].strip() != "":
+                new_words.append(word)
+        else:
+            _words = Word.query.filter_by(key=word['key']).all()
+            if word['value'].strip() != "":
+                repetitious = False
+                for tWord in _words:
+                    if tWord.value == word['value']:
+                        repetitious = True
+
+                if repetitious == False:
+                    new_words.append(word)
+
+    try:
+        wordXXX = getWordsInstanceOfWord(new_words)
+        db.session.add_all(wordXXX)
+        db.session.commit()
+        return True
+    except:
+        return False
 
 
 def loadWords():
