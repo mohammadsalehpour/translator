@@ -1,4 +1,3 @@
-from tkinter import E
 from werkzeug import Response
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import Model, SQLAlchemy
