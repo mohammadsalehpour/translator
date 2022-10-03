@@ -592,5 +592,7 @@ def indexNone(list, index):
         return False
 
 
-if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=5050)
+# if __name__ == "__main__":
+#     # from waitress import serve
+#     # serve(app, host="localhost", port=5050)
+#     app.run(debug=False, host="localhost", port=5050)
